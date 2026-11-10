@@ -30,7 +30,6 @@ function useTouchSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
   return { onTouchStart, onTouchMove, onTouchEnd };
 }
 import { useQuery } from "@tanstack/react-query";
-import { CouponCode } from "@shared/schema";
 import { getProductPricing } from "@shared/product-pricing";
 import { getResponsiveImageProps } from "@/lib/responsive-image";
 
@@ -647,102 +646,6 @@ const TrustBanner = () => {
     </section>
   );
 };
-const MaximizeSavings = () => {
-  const savingsDeals = [
-    { badge: "10% Off", badgeColor: "#00858d", img: "/images/ugreen-adapter.webp", name: "USB-C Hub", worth: 6500 },
-    { badge: "Free", badgeColor: "#25a244", img: "/images/soundcore-liberty-4.webp", name: "Earbuds Case", worth: 8000 },
-    { badge: "Flash", badgeColor: "#e53935", img: "/images/iphone-16.webp", name: "iPhone 16", worth: 1200000 },
-    { badge: "BOGO", badgeColor: "#FFC107", img: "/images/beats-pill.webp", name: "Beats Pill", worth: 250000 },
-    { badge: "15% Off", badgeColor: "#00858d", img: "/images/saramonic-mic.webp", name: "Mic System", worth: 42000 },
-    { badge: "Free", badgeColor: "#25a244", img: "/images/iphone-17-pro-max-1.webp", name: "Screen Guard", worth: 5000 },
-  ];
-
-  const { data: activeCoupons = [] } = useQuery<CouponCode[]>({
-    queryKey: ["/api/coupons"],
-    staleTime: 60000,
-  });
-
-  const ScrollRow = ({ items }: { items: typeof savingsDeals }) => (
-    <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-      {items.map((item, i) => (
-        <Link key={i} href="/shop">
-          <div className="flex-shrink-0 w-[100px] h-[130px] rounded-[10px] bg-[#f5f5f5] dark:bg-gray-800 overflow-hidden cursor-pointer hover:shadow-md transition-shadow flex flex-col">
-            <div className="relative flex-1 bg-white dark:bg-gray-700 flex items-center justify-center p-1 min-h-0">
-              <span
-                className="absolute top-1 left-1 z-10 text-[8px] font-black px-1.5 py-0.5 rounded-full leading-none"
-                style={{ backgroundColor: item.badgeColor, color: "#fff" }}
-              >
-                {item.badge}
-              </span>
-              <img
-                src={item.img}
-                alt={item.name}
-                loading="lazy"
-                decoding="async"
-                className="h-full w-full object-contain"
-                {...getResponsiveImageProps(item.img, "100px")}
-              />
-            </div>
-            <div className="px-1.5 pt-1 pb-1.5 bg-[#f5f5f5] dark:bg-gray-800">
-              <p className="text-[10px] font-semibold text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">{item.name}</p>
-              <p className="text-[9px] text-gray-400 mt-0.5">worth {formatSiteCurrency(item.worth)}</p>
-            </div>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
-
-  return (
-    <section className="imigongo-pattern imigongo-diamonds px-3 py-3 space-y-3 max-w-7xl mx-auto">
-      {/* Row 1 — Maximize your savings */}
-      <div className="bg-white dark:bg-gray-900 rounded-[14px] p-3 md:p-4">
-        <div className="flex items-center justify-between mb-2.5">
-          <h2 className="text-[14px] md:text-base font-black text-gray-900 dark:text-white">Maximize your savings</h2>
-          <Link href="/shop" className="text-[12px] font-semibold text-[#00858d] hover:underline">
-            See all →
-          </Link>
-        </div>
-        <ScrollRow items={savingsDeals} />
-      </div>
-
-      {/* Row 2 — Top deals for you (with live coupon codes from admin) */}
-      {activeCoupons.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 rounded-[14px] p-3 md:p-4">
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-[14px] md:text-base font-black text-gray-900 dark:text-white">Live coupon deals</h2>
-            <Link href="/deals" className="text-[12px] font-semibold text-[#00858d] hover:underline">
-              See all →
-            </Link>
-          </div>
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-            {activeCoupons.map((coupon) => {
-              const color = (coupon as any).badgeColor || "#00858d";
-              const label = coupon.discountType === "percentage"
-                ? `${coupon.discountValue}% off`
-                : `${formatSiteCurrency(coupon.discountValue)} off`;
-              return (
-                <div
-                  key={coupon.id}
-                  className="flex-shrink-0 flex items-center gap-1.5 rounded-full px-2.5 py-1.5 cursor-pointer hover:shadow-md transition-shadow"
-                  style={{ border: `1.5px dashed ${color}`, backgroundColor: `${color}12` }}
-                  onClick={() => navigator.clipboard?.writeText(coupon.code)}
-                  title="Click to copy code"
-                >
-                  <span className="text-[9px] font-bold" style={{ color }}>{coupon.label || label}</span>
-                  <span className="text-[8px] font-black bg-white dark:bg-gray-800 px-1.5 py-0.5 rounded-full font-mono" style={{ color, border: `1px solid ${color}40` }}>
-                    {coupon.code}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </section>
-  );
-};
-
 const HomeProducts = () => {
   const { data: products } = useProducts({ category: "Home" });
   
@@ -1592,7 +1495,6 @@ export default function Home() {
         <TrustBar />
         <HomeSectionsDisplay />
         <TopDeals />
-        <MaximizeSavings />
         <FeaturedSlider />
         <RecommendedProducts />
         <PopularCategories />
