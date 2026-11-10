@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, Eye, EyeOff, GripVertical, Upload, X, ImageIcon, ChevronUp, ChevronDown, Sparkles } from "lucide-react";
@@ -8,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import type { FeaturedSlide } from "@shared/schema";
 
-const fmt = (v: number) =>
-  new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF", maximumFractionDigits: 0 }).format(v);
+const fmt = formatSiteCurrency;
 
 function SlideForm({
   slide,

@@ -11,6 +11,8 @@ import { CompareBar } from "@/components/CompareBar";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { captureOrderSourceFromUrl } from "@/lib/order-source";
 import { GoogleOneTap } from "@/components/GoogleOneTap";
+import { useQuery } from "@tanstack/react-query";
+import type { SiteCurrency } from "@/lib/site-currency";
 
 // Load only the current route. Eagerly importing every page here blocks the
 // homepage on unrelated shop, checkout, and admin bundles.
@@ -143,6 +145,12 @@ function VisitorTracker() {
   return null;
 }
 
+function SiteCurrencyRefresh({ children }: { children: React.ReactNode }) {
+  const { data } = useQuery<SiteCurrency>({ queryKey: ["/api/site-currency"] });
+  // Remount formatted views whenever the shared display setting changes.
+  return <div key={`${data?.currency ?? "RWF"}:${data?.rwfPerUnit ?? "1"}`}>{children}</div>;
+}
+
 function Router() {
   return (
     <>
@@ -198,12 +206,12 @@ function App() {
       <TooltipProvider>
         <CompareProvider>
         <WishlistProvider>
-          <Toaster />
-          <div className="pb-16 lg:pb-0">
-            <Router />
-          </div>
-          <CompareBar />
-          <MobileBottomNav />
+          <SiteCurrencyRefresh>
+            <Toaster />
+            <div className="pb-16 lg:pb-0"><Router /></div>
+            <CompareBar />
+            <MobileBottomNav />
+          </SiteCurrencyRefresh>
         </WishlistProvider>
         </CompareProvider>
       </TooltipProvider>

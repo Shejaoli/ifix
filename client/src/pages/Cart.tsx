@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Navbar } from "@/components/Navbar";
@@ -137,9 +138,7 @@ export default function Cart() {
     ...availableRecommendations.filter((product) => !cartCategories.has(product.category) && !product.isHotDeal && !product.isFeatured),
   ].slice(0, 6);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 }).format(price);
-  };
+  const formatPrice = formatSiteCurrency;
 
   return (
     <div className="min-h-screen bg-background">

@@ -558,6 +558,22 @@ export async function registerRoutes(
     res.json(videos);
   });
 
+  app.get("/api/site-currency", async (_req, res) => {
+    try { res.setHeader("Cache-Control", "no-store"); res.json(await storage.getSiteCurrency()); }
+    catch { res.status(500).json({ message: "Could not load display currency" }); }
+  });
+
+  app.patch("/api/admin/site-currency", requireAdminAuth, express.json(), async (req, res) => {
+    const currency = typeof req.body?.currency === "string" ? req.body.currency.toUpperCase() : "";
+    const rwfPerUnit = Number(req.body?.rwfPerUnit);
+    const supportedCurrencies = new Set(["RWF", "USD", "EUR", "GBP", "KES", "UGX", "TZS", "CAD", "AUD", "JPY", "CNY", "INR", "AED", "ZAR"]);
+    if (!supportedCurrencies.has(currency) || !Number.isFinite(rwfPerUnit) || rwfPerUnit <= 0 || rwfPerUnit > 1_000_000_000) {
+      return res.status(400).json({ message: "Choose a supported currency and enter a valid RWF-per-unit rate." });
+    }
+    try { res.json(await storage.setSiteCurrency(currency, String(rwfPerUnit))); }
+    catch { res.status(500).json({ message: "Could not save display currency" }); }
+  });
+
   app.delete("/api/admin/videos/:id", requireAdminAuth, async (req, res) => {
     try {
       const id = Number(req.params.id);

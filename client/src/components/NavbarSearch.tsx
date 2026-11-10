@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useLocation } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
@@ -170,7 +171,7 @@ export function NavbarSearch({ mobile = false }: { mobile?: boolean }) {
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium text-foreground">{product.name}</span>
-                    <span className="block text-xs text-muted-foreground">{product.price.toLocaleString()} RWF</span>
+                    <span className="block text-xs text-muted-foreground">{formatSiteCurrency(product.price)}</span>
                   </span>
                 </button>
               ))}
@@ -181,3 +182,4 @@ export function NavbarSearch({ mobile = false }: { mobile?: boolean }) {
     </div>
   );
 }
+

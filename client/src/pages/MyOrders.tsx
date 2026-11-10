@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useQuery } from "@tanstack/react-query";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
@@ -33,13 +34,7 @@ export default function MyOrders() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: "RWF",
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatCurrency = formatSiteCurrency;
 
   return (
     <div className="flex flex-col min-h-screen">

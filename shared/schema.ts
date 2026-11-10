@@ -271,6 +271,14 @@ export const pushSubscriptions = pgTable("push_subscriptions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// One shared store-wide display currency. Product/order prices stay stored in RWF.
+export const siteCurrencySettings = pgTable("site_currency_settings", {
+  id: integer("id").primaryKey().default(1),
+  currency: text("currency").notNull().default("RWF"),
+  rwfPerUnit: text("rwf_per_unit").notNull().default("1"),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const insertPushSubscriptionSchema = createInsertSchema(pushSubscriptions).omit({ id: true, createdAt: true });
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
 export type InsertPushSubscription = z.infer<typeof insertPushSubscriptionSchema>;

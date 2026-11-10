@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,9 +74,7 @@ export default function TrackOrder() {
     },
   });
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 }).format(price);
-  };
+  const formatPrice = formatSiteCurrency;
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {

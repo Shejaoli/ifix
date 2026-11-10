@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import { useProducts } from "@/hooks/use-products";
@@ -31,13 +32,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useRef, useState, useMemo } from "react";
 import type { Admin } from "@shared/schema";
 
-export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-RW", {
-    style: "currency",
-    currency: "RWF",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+export function formatCurrency(amount: number) { return formatSiteCurrency(amount); }
 
 interface AdminProductsProps {
   onAddClick: () => void;

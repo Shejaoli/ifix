@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -98,7 +99,7 @@ export default function CustomerAccount() {
     return null;
   }
 
-  const fmt = (n: number) => `RWF ${n.toLocaleString()}`;
+  const fmt = formatSiteCurrency;
 
   return (
     <>

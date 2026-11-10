@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { ShoppingCart, Star, Eye, GitCompare, Heart } from "lucide-react";
@@ -35,9 +36,7 @@ export function ProductCard({ product, isDeal, hideFeaturedBadge }: ProductCardP
   const inWishlist = isInWishlist(product.id);
   const [, setLocation] = useLocation();
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF' }).format(price);
-  };
+  const formatPrice = formatSiteCurrency;
 
   const { discount, hasDiscount, salePrice: dealPrice } = getProductPricing(product);
 

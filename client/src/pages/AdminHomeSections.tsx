@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState, useMemo } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -148,7 +149,7 @@ function ProductPicker({ selectedIds, onChange, allProducts }: {
                     <p className="text-[10px] text-muted-foreground">{p.brand} · {p.category}</p>
                   </div>
                   <span className="text-xs font-bold text-primary shrink-0">
-                    {new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF", maximumFractionDigits: 0 }).format(p.price)}
+                    {formatSiteCurrency(p.price)}
                   </span>
                 </button>
               );
@@ -489,3 +490,4 @@ export default function AdminHomeSections() {
     </div>
   );
 }
+

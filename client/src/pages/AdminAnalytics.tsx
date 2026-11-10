@@ -1,3 +1,4 @@
+import { formatSiteCurrency, getSiteCurrency } from "@/lib/site-currency";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, LineChart, Line, AreaChart, Area } from "recharts";
 import { TrendingUp, Users, ShoppingCart, DollarSign, ArrowUpRight, ArrowDownRight, Monitor, Smartphone, Settings } from "lucide-react";
@@ -25,13 +26,7 @@ export default function AdminAnalytics() {
     { name: 'Jun', sales: 0, users: 0 },
   ];
 
-  const formatRWF = (value: number) => {
-    return new Intl.NumberFormat("en-RW", {
-      style: "currency",
-      currency: "RWF",
-      maximumFractionDigits: 0,
-    }).format(value);
-  };
+  const formatRWF = formatSiteCurrency;
 
   const statsCards = [
     { title: "Total Revenue", value: stats?.totalRevenue ? formatRWF(stats.totalRevenue) : formatRWF(0), trend: "+0%", icon: DollarSign, color: "text-primary" },
@@ -74,7 +69,7 @@ export default function AdminAnalytics() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card className="border-none shadow-lg overflow-hidden">
           <CardHeader className="bg-muted/50 border-b">
-            <CardTitle className="text-sm font-bold uppercase tracking-wider">Revenue Growth (RWF)</CardTitle>
+            <CardTitle className="text-sm font-bold uppercase tracking-wider">Revenue Growth ({getSiteCurrency().currency})</CardTitle>
           </CardHeader>
           <CardContent className="p-6 h-[300px]">
             <ResponsiveContainer width="100%" height="100%">

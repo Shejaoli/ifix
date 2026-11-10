@@ -8,9 +8,10 @@ import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, ShieldCheck, User, KeyRound, Mail, Fingerprint, Bell } from "lucide-react";
+import { Loader2, ShieldCheck, User, KeyRound, Mail, Fingerprint, Bell, RefreshCw } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { SUPPORTED_CURRENCIES, type SiteCurrency } from "@/lib/site-currency";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -128,6 +129,54 @@ function NotificationsCard() {
   );
 }
 
+function CurrencySettingsCard() {
+  const { toast } = useToast();
+  const { data } = useQuery<SiteCurrency>({ queryKey: ["/api/site-currency"] });
+  const [currency, setCurrency] = useState("RWF");
+  const [rate, setRate] = useState("1");
+
+  useEffect(() => {
+    if (data) { setCurrency(data.currency); setRate(data.rwfPerUnit); }
+  }, [data]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("PATCH", "/api/admin/site-currency", { currency, rwfPerUnit: Number(rate) });
+      return response.json();
+    },
+    onSuccess: (updated: SiteCurrency) => {
+      queryClient.setQueryData(["/api/site-currency"], updated);
+      toast({ title: "Store currency updated", description: `All displayed prices now use ${updated.currency}.` });
+    },
+    onError: (error: Error) => toast({ title: "Currency update failed", description: error.message, variant: "destructive" }),
+  });
+
+  return <Card className="border-none shadow-xl bg-card/50 backdrop-blur md:col-span-2">
+    <CardHeader>
+      <CardTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tight"><RefreshCw className="h-5 w-5 text-primary" /> Store display currency</CardTitle>
+      <CardDescription>Convert displayed prices across the storefront with one setting. Product prices and checkout records remain stored in RWF.</CardDescription>
+    </CardHeader>
+    <CardContent>
+      <form className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end" onSubmit={(event) => { event.preventDefault(); saveMutation.mutate(); }}>
+        <div className="space-y-2">
+          <Label htmlFor="display-currency">Show prices in</Label>
+          <select id="display-currency" value={currency} onChange={(event) => setCurrency(event.target.value)} className="h-11 w-full rounded-md border border-input bg-background px-3 text-sm">
+            {SUPPORTED_CURRENCIES.map((item) => <option key={item.code} value={item.code}>{item.code} — {item.name}</option>)}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="rwf-per-unit">RWF per 1 {currency}</Label>
+          <Input id="rwf-per-unit" type="number" min="0.000001" step="any" required value={rate} onChange={(event) => setRate(event.target.value)} disabled={currency === "RWF"} />
+        </div>
+        <Button type="submit" className="h-11 font-bold" disabled={saveMutation.isPending || !Number.isFinite(Number(rate)) || Number(rate) <= 0}>
+          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Apply to whole site
+        </Button>
+      </form>
+      <p className="mt-3 text-xs text-muted-foreground">Example: choose USD and enter 1,500 if 1 USD = 1,500 RWF. A 3,000,000 RWF price will display as about $2,000. This is a display conversion only.</p>
+    </CardContent>
+  </Card>;
+}
+
 const accountSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
@@ -194,6 +243,7 @@ export default function AdminSettings() {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <CurrencySettingsCard />
         <div className="space-y-8">
           <Card className="border-none shadow-xl bg-card/50 backdrop-blur">
             <CardHeader>

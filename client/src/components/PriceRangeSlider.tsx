@@ -1,3 +1,4 @@
+import { displayPriceToRwf, formatSiteCurrency, getSiteCurrency, rwfToDisplayPrice } from "@/lib/site-currency";
 import { useRef, useCallback, useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 
@@ -10,16 +11,7 @@ interface PriceRangeSliderProps {
   className?: string;
 }
 
-const formatRWF = (price: number) =>
-  "RWF\u00A0" +
-  new Intl.NumberFormat("en-RW", { maximumFractionDigits: 0 }).format(price);
-
-const formatShort = (price: number) => {
-  if (price >= 1_000_000)
-    return (price / 1_000_000).toFixed(1).replace(/\.0$/, "") + "M";
-  if (price >= 1_000) return (price / 1_000).toFixed(0) + "k";
-  return String(price);
-};
+const formatRWF = formatSiteCurrency;
 
 const playTick = () => {
   try {
@@ -51,15 +43,15 @@ export function PriceRangeSlider({
   const dragging = useRef<"min" | "max" | null>(null);
   const prevValue = useRef<number[]>(value);
   const [activeHandle, setActiveHandle] = useState<"min" | "max" | null>(null);
-  const [minText, setMinText] = useState(String(value[0]));
-  const [maxText, setMaxText] = useState(String(value[1]));
+  const [minText, setMinText] = useState(String(Math.round(rwfToDisplayPrice(value[0]))));
+  const [maxText, setMaxText] = useState(String(Math.round(rwfToDisplayPrice(value[1]))));
 
   useEffect(() => {
-    setMinText(String(value[0]));
+    setMinText(String(Math.round(rwfToDisplayPrice(value[0]))));
   }, [value[0]]);
 
   useEffect(() => {
-    setMaxText(String(value[1]));
+    setMaxText(String(Math.round(rwfToDisplayPrice(value[1]))));
   }, [value[1]]);
 
   const notify = useCallback(
@@ -128,19 +120,19 @@ export function PriceRangeSlider({
   };
 
   const commitMin = () => {
-    const raw = parseInt(minText.replace(/\D/g, ""), 10);
-    if (isNaN(raw)) { setMinText(String(value[0])); return; }
-    const clamped = snap(Math.min(raw, value[1] - step));
+    const raw = Number(minText.replace(/,/g, ""));
+    if (!Number.isFinite(raw)) { setMinText(String(Math.round(rwfToDisplayPrice(value[0])))); return; }
+    const clamped = snap(Math.min(displayPriceToRwf(raw), value[1] - step));
     notify([clamped, value[1]]);
-    setMinText(String(clamped));
+    setMinText(String(Math.round(rwfToDisplayPrice(clamped))));
   };
 
   const commitMax = () => {
-    const raw = parseInt(maxText.replace(/\D/g, ""), 10);
-    if (isNaN(raw)) { setMaxText(String(value[1])); return; }
-    const clamped = snap(Math.max(raw, value[0] + step));
+    const raw = Number(maxText.replace(/,/g, ""));
+    if (!Number.isFinite(raw)) { setMaxText(String(Math.round(rwfToDisplayPrice(value[1])))); return; }
+    const clamped = snap(Math.max(displayPriceToRwf(raw), value[0] + step));
     notify([value[0], clamped]);
-    setMaxText(String(clamped));
+    setMaxText(String(Math.round(rwfToDisplayPrice(clamped))));
   };
 
   const range = max - min;
@@ -253,7 +245,7 @@ export function PriceRangeSlider({
                   boxShadow: "0 2px 8px hsl(var(--primary)/0.4)",
                 }}
               >
-                {formatShort(value[0])}
+                {formatRWF(value[0])}
               </div>
               <div
                 className="w-0 h-0 mx-auto"
@@ -284,7 +276,7 @@ export function PriceRangeSlider({
                   boxShadow: "0 2px 8px hsl(var(--primary)/0.4)",
                 }}
               >
-                {formatShort(value[1])}
+                {formatRWF(value[1])}
               </div>
               <div
                 className="w-0 h-0 mx-auto"
@@ -319,7 +311,7 @@ export function PriceRangeSlider({
             className="text-[10px] font-medium shrink-0"
             style={{ color: "hsl(var(--primary)/0.6)" }}
           >
-            RWF
+            {getSiteCurrency().currency}
           </span>
           <input
             type="text"
@@ -353,7 +345,7 @@ export function PriceRangeSlider({
             className="text-[10px] font-medium shrink-0"
             style={{ color: "hsl(var(--primary)/0.6)" }}
           >
-            RWF
+            {getSiteCurrency().currency}
           </span>
           <input
             type="text"

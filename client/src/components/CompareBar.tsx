@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, GitCompare, ChevronDown, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,8 +9,7 @@ import { Link } from "wouter";
 import { getProductPricing } from "@shared/product-pricing";
 
 function CompareModal({ products, onClose }: { products: Product[]; onClose: () => void }) {
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" }).format(price);
+  const formatPrice = formatSiteCurrency;
 
   const allSpecKeys = Array.from(
     new Set(
@@ -245,3 +245,4 @@ export function CompareBar() {
     </>
   );
 }
+

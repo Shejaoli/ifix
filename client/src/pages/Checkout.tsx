@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState, useEffect } from "react";
 import { useLocation, Link } from "wouter";
 import { useForm } from "react-hook-form";
@@ -696,9 +697,7 @@ export default function Checkout() {
   // Shipping is free for every order (Phase 11)
   const total = subtotal;
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF' }).format(price);
-  };
+  const formatPrice = formatSiteCurrency;
 
   const isOrderSuccess = location === "/order-success" || location === "/order/success";
 
@@ -799,6 +798,7 @@ export default function Checkout() {
                     <div className="text-right">
                       <span className="text-xs text-muted-foreground uppercase font-black tracking-widest block">Amount due</span>
                       <span className="text-3xl font-black tracking-tighter text-primary">{formatPrice(total)}</span>
+                      <span className="mt-1 block text-[11px] text-muted-foreground">Display conversion only. Order and payment amounts are recorded in RWF.</span>
                     </div>
                   </div>
                 </div>

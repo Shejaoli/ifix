@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useMemo, useState } from "react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -25,8 +26,7 @@ import { PriceRangeSlider } from "@/components/PriceRangeSlider";
 import { getProductPricing } from "@shared/product-pricing";
 import { getResponsiveImageProps } from "@/lib/responsive-image";
 
-const formatRwf = (amount: number) =>
-  `${new Intl.NumberFormat("en-RW", { maximumFractionDigits: 0 }).format(amount)} RWF`;
+const formatRwf = formatSiteCurrency;
 
 function SpotlightDeal({ product }: { product: Product }) {
   const { discount, salePrice } = getProductPricing(product);

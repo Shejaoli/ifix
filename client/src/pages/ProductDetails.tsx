@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useRoute, Link, useLocation } from "wouter";
 import { useProduct, useProducts, useProductBySlug } from "@/hooks/use-products";
 import { Navbar } from "@/components/Navbar";
@@ -232,7 +233,7 @@ export default function ProductDetails() {
   };
 
   const totalPrice = productPricing.salePrice * quantity;
-  const formatPrice = (price: number) => new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF' }).format(price);
+  const formatPrice = formatSiteCurrency;
 
   const whatsappOrderMessage = `Hello IFIX, I want to order: ${product.name} - RF ${productPricing.salePrice}. Please confirm availability.`;
   const whatsappUrl = `https://wa.me/250788442127?text=${encodeURIComponent(whatsappOrderMessage)}`;

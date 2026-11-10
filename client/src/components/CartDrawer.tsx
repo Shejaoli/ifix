@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { ShoppingBag, Plus, Minus, Trash2 } from "lucide-react";
@@ -58,9 +59,7 @@ export function CartDrawer() {
   const total = subtotal + deliveryFee;
   const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 }).format(price);
-  };
+  const formatPrice = formatSiteCurrency;
 
   const generateWhatsAppUrl = () => {
     const message = `Hello IFIX, I would like to order the following items:\n\n${cart

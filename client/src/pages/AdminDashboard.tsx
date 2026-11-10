@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { Fragment, useState, useEffect, useMemo } from "react";
 import {
   LayoutDashboard,
@@ -74,7 +75,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import "./AdminDashboard.css";
 
-const fmt = (value: number) => `RF ${new Intl.NumberFormat("en-RW", { maximumFractionDigits: 0 }).format(Number(value || 0))}`;
+const fmt = (value: number) => formatSiteCurrency(Number(value || 0));
 const CATEGORY_COLORS = ["#00b2bd", "#6556a5", "#ff0090", "#ffb822", "#38bdf8", "#f97316", "#6556a5"];
 const NAV_GROUPS = [
   { id: "Catalog", items: [{ id: "Products", label: "Products", icon: Package }, { id: "Home Sections", label: "Home Sections", icon: Layers }, { id: "Featured Slides", label: "Featured Slides", icon: Sparkles }, { id: "Hot Deals", label: "Today's Top Deals", icon: Flame }, { id: "Videos", label: "Promo Videos", icon: Film }] },
@@ -535,3 +536,4 @@ export default function AdminDashboard() {
     </div>
   );
 }
+

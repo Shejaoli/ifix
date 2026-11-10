@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { products, admins, orders, auditLogs, videos, siteVisitors, homeSections, notFoundLogs, reviews, featuredSlides, couponCodes, customers, deliveryFees, wishlists, pushSubscriptions, type Product, type InsertProduct, type Admin, type InsertAdmin, type Order, type InsertOrder, type AuditLog, type InsertAuditLog, type Video, type InsertVideo, type SiteVisitor, type InsertSiteVisitor, type HomeSection, type InsertHomeSection, type NotFoundLog, type InsertNotFoundLog, type Review, type InsertReview, type FeaturedSlide, type InsertFeaturedSlide, type CouponCode, type InsertCouponCode, type Customer, type DeliveryFee, type Wishlist, type PushSubscription } from "@shared/schema";
+import { products, admins, orders, auditLogs, videos, siteVisitors, homeSections, notFoundLogs, reviews, featuredSlides, couponCodes, customers, deliveryFees, wishlists, pushSubscriptions, siteCurrencySettings, type Product, type InsertProduct, type Admin, type InsertAdmin, type Order, type InsertOrder, type AuditLog, type InsertAuditLog, type Video, type InsertVideo, type SiteVisitor, type InsertSiteVisitor, type HomeSection, type InsertHomeSection, type NotFoundLog, type InsertNotFoundLog, type Review, type InsertReview, type FeaturedSlide, type InsertFeaturedSlide, type CouponCode, type InsertCouponCode, type Customer, type DeliveryFee, type Wishlist, type PushSubscription } from "@shared/schema";
 import { eq, like, and, desc, gte, lte, or, count, countDistinct } from "drizzle-orm";
 
 export interface PaginatedResult<T> {
@@ -52,6 +52,8 @@ async function ensureUniqueSlug(baseSlug: string, excludeId?: number): Promise<s
 }
 
 export interface IStorage {
+  getSiteCurrency(): Promise<{ currency: string; rwfPerUnit: string }>;
+  setSiteCurrency(currency: string, rwfPerUnit: string): Promise<{ currency: string; rwfPerUnit: string }>;
   getProducts(filters?: { category?: string; featured?: boolean; search?: string; stockStatus?: string }): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
   getProductBySlug(slug: string): Promise<Product | undefined>;
@@ -166,6 +168,17 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  async getSiteCurrency(): Promise<{ currency: string; rwfPerUnit: string }> {
+    const [setting] = await db.select().from(siteCurrencySettings).where(eq(siteCurrencySettings.id, 1)).limit(1);
+    return setting ? { currency: setting.currency, rwfPerUnit: setting.rwfPerUnit } : { currency: "RWF", rwfPerUnit: "1" };
+  }
+
+  async setSiteCurrency(currency: string, rwfPerUnit: string): Promise<{ currency: string; rwfPerUnit: string }> {
+    const [setting] = await db.insert(siteCurrencySettings).values({ id: 1, currency, rwfPerUnit })
+      .onConflictDoUpdate({ target: siteCurrencySettings.id, set: { currency, rwfPerUnit, updatedAt: new Date() } }).returning();
+    return { currency: setting.currency, rwfPerUnit: setting.rwfPerUnit };
+  }
+
   async getProducts(filters?: { category?: string; featured?: boolean; search?: string; stockStatus?: string }): Promise<Product[]> {
     let conditions = [];
 

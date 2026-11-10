@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "wouter";
 import { ArrowRight, LoaderCircle, Send, Sparkles } from "lucide-react";
@@ -151,7 +152,7 @@ export function YsotaAIAssistant({ className = "" }: { className?: string }) {
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-sm font-semibold text-foreground">{product.name}</span>
                         <span className="mt-1 block line-clamp-2 text-xs text-muted-foreground">{note}</span>
-                        <span className="mt-2 block text-sm font-bold text-primary">{product.price.toLocaleString()} RWF</span>
+                        <span className="mt-2 block text-sm font-bold text-primary">{formatSiteCurrency(product.price)}</span>
                         <span className="mt-1 block text-[11px] text-muted-foreground">
                           {product.stockStatus === "pre_order" ? "Available for pre-order" : "In stock"}
                         </span>
@@ -196,3 +197,4 @@ export function YsotaAIAssistant({ className = "" }: { className?: string }) {
     </Dialog>
   );
 }
+

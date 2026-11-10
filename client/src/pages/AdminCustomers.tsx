@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -16,8 +17,7 @@ import {
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const fmt = (v: number) =>
-  new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF", maximumFractionDigits: 0 }).format(v);
+const fmt = formatSiteCurrency;
 
 const STATUS_COLORS: Record<string, string> = {
   pending:   "bg-amber-100 text-amber-700",

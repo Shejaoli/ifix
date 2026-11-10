@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,9 +69,7 @@ export function CheckoutModal({ product, quantity, open, onOpenChange, selectedS
         description: "Redirecting to WhatsApp for confirmation...",
       });
 
-      const formatPrice = (price: number) => {
-        return new Intl.NumberFormat('en-RW', { style: 'currency', currency: 'RWF', maximumFractionDigits: 0 }).format(price);
-      };
+      const formatPrice = formatSiteCurrency;
 
       const message = `Hello IFIX, my name is ${order.customerName}. I have placed an order for ${quantity}x ${product.name}. Total amount: ${order.totalAmount} RWF. Order ID: #${order.id}. Thank you.`;
       const whatsappUrl = `https://wa.me/250788442127?text=${encodeURIComponent(message)}`;
@@ -102,7 +101,7 @@ export function CheckoutModal({ product, quantity, open, onOpenChange, selectedS
           <DialogDescription>
             Buying: <span className="font-semibold text-foreground">{quantity}x {product.name}</span> for {" "}
             <span className="font-bold text-primary">
-              {new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF", maximumFractionDigits: 0 }).format(product.price)}
+              {formatSiteCurrency(product.price)}
             </span>
           </DialogDescription>
         </DialogHeader>

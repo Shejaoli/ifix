@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { Helmet } from "react-helmet-async";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
@@ -648,12 +649,12 @@ const TrustBanner = () => {
 };
 const MaximizeSavings = () => {
   const savingsDeals = [
-    { badge: "10% Off", badgeColor: "#00858d", img: "/images/ugreen-adapter.webp", name: "USB-C Hub", worth: "RWF 6,500" },
-    { badge: "Free", badgeColor: "#25a244", img: "/images/soundcore-liberty-4.webp", name: "Earbuds Case", worth: "RWF 8,000" },
-    { badge: "Flash", badgeColor: "#e53935", img: "/images/iphone-16.webp", name: "iPhone 16", worth: "RWF 1,200,000" },
-    { badge: "BOGO", badgeColor: "#FFC107", img: "/images/beats-pill.webp", name: "Beats Pill", worth: "RWF 250,000" },
-    { badge: "15% Off", badgeColor: "#00858d", img: "/images/saramonic-mic.webp", name: "Mic System", worth: "RWF 42,000" },
-    { badge: "Free", badgeColor: "#25a244", img: "/images/iphone-17-pro-max-1.webp", name: "Screen Guard", worth: "RWF 5,000" },
+    { badge: "10% Off", badgeColor: "#00858d", img: "/images/ugreen-adapter.webp", name: "USB-C Hub", worth: 6500 },
+    { badge: "Free", badgeColor: "#25a244", img: "/images/soundcore-liberty-4.webp", name: "Earbuds Case", worth: 8000 },
+    { badge: "Flash", badgeColor: "#e53935", img: "/images/iphone-16.webp", name: "iPhone 16", worth: 1200000 },
+    { badge: "BOGO", badgeColor: "#FFC107", img: "/images/beats-pill.webp", name: "Beats Pill", worth: 250000 },
+    { badge: "15% Off", badgeColor: "#00858d", img: "/images/saramonic-mic.webp", name: "Mic System", worth: 42000 },
+    { badge: "Free", badgeColor: "#25a244", img: "/images/iphone-17-pro-max-1.webp", name: "Screen Guard", worth: 5000 },
   ];
 
   const { data: activeCoupons = [] } = useQuery<CouponCode[]>({
@@ -684,7 +685,7 @@ const MaximizeSavings = () => {
             </div>
             <div className="px-1.5 pt-1 pb-1.5 bg-[#f5f5f5] dark:bg-gray-800">
               <p className="text-[10px] font-semibold text-gray-800 dark:text-gray-200 leading-tight line-clamp-2">{item.name}</p>
-              <p className="text-[9px] text-gray-400 mt-0.5">worth {item.worth}</p>
+              <p className="text-[9px] text-gray-400 mt-0.5">worth {formatSiteCurrency(item.worth)}</p>
             </div>
           </div>
         </Link>
@@ -719,7 +720,7 @@ const MaximizeSavings = () => {
               const color = (coupon as any).badgeColor || "#00858d";
               const label = coupon.discountType === "percentage"
                 ? `${coupon.discountValue}% off`
-                : `RWF ${coupon.discountValue.toLocaleString()} off`;
+                : `${formatSiteCurrency(coupon.discountValue)} off`;
               return (
                 <div
                   key={coupon.id}
@@ -1232,8 +1233,7 @@ const FeaturedSlider = () => {
     },
   });
 
-  const fmtPrice = (v: number) =>
-    new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF", maximumFractionDigits: 0 }).format(v);
+  const fmtPrice = formatSiteCurrency;
 
   const goTo = (idx: number) => {
     if (isAnimating || idx === current) return;
@@ -1599,7 +1599,6 @@ export default function Home() {
         <CustomerFavorites />
         <HomeProducts />
         <GamingPreview />
-        <CircularEconomy />
         <AudioPreview />
 
         <Footer />
@@ -1607,3 +1606,4 @@ export default function Home() {
     </>
   );
 }
+

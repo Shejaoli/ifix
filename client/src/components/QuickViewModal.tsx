@@ -1,3 +1,4 @@
+import { formatSiteCurrency } from "@/lib/site-currency";
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "wouter";
@@ -20,8 +21,7 @@ function QuickViewContent({ product, onClose }: { product: Product; onClose: () 
   const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const [selectedImage, setSelectedImage] = useState(0);
 
-  const formatPrice = (price: number) =>
-    new Intl.NumberFormat("en-RW", { style: "currency", currency: "RWF" }).format(price);
+  const formatPrice = formatSiteCurrency;
 
   const { discount, hasDiscount, salePrice: dealPrice } = getProductPricing(product);
 
@@ -267,3 +267,4 @@ export function QuickViewModal({ product, onClose }: QuickViewModalProps) {
     document.body
   );
 }
+
