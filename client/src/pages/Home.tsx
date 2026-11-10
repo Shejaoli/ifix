@@ -165,28 +165,18 @@ const FeaturedPosterMarquee = () => {
   const prefersReducedMotion = useReducedMotion();
   const posters = [
     {
-      title: "IFIX — Your Trusted Tech Store in Kigali",
-      image: "/images/ifix-trusted-store-man.webp",
-      href: "/shop",
-    },
-    {
-      title: "DJI Mic Mini — wireless microphone for creators",
-      image: "/images/dji-mic-mini-promo.webp",
-      href: "/shop?search=DJI%20Mic%20Mini",
-    },
-    {
-      title: "IFIX — trusted technology and support in Kigali",
-      image: "/images/ifix-trusted-store-woman.webp",
-      href: "/shop",
-    },
-    {
       title: "AirPods Max — immersive sound and exceptional comfort",
-      image: "/images/airpods-max-promo.webp",
+      image: "/images/ifix-airpods-max-promo.webp",
       href: "/shop?search=AirPods%20Max",
     },
     {
+      title: "DJI Mic Mini — wireless microphone for creators",
+      image: "/images/ifix-dji-mic-mini-promo.webp",
+      href: "/shop?search=DJI%20Mic%20Mini",
+    },
+    {
       title: "AirPods Series — premium sound and seamless connection",
-      image: "/images/airpods-series-promo.webp",
+      image: "/images/ifix-airpods-premium-promo.webp",
       href: "/shop?search=AirPods",
     },
   ];

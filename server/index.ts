@@ -58,6 +58,9 @@ declare module "http" {
 
 app.use(
   express.json({
+    // Product imports have their own 50 MB parser; keep this earlier global
+    // parser at the same limit so it does not reject those requests first.
+    limit: "50mb",
     verify: (req, _res, buf) => {
       req.rawBody = buf;
     },
