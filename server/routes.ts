@@ -9,7 +9,7 @@ import { db } from "./db";
 import { eq, count, desc, inArray } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { randomBytes } from "crypto";
-import { insertProductSchema, insertOrderSchema, orders, ipayWebhookEvents, insertVideoSchema, videos, admins, insertHomeSectionSchema, products, insertCouponCodeSchema, type Order } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, orders, ipayWebhookEvents, insertVideoSchema, videos, admins, insertHomeSectionSchema, products, insertCouponCodeSchema, type Order, auditLogs, customers, wishlists, couponCodes, homeSections, featuredSlides, reviews, siteVisitors, notFoundLogs } from "@shared/schema";
 import { DISTRICTS_BY_PROVINCE, isValidRwandaLocation } from "@shared/rwanda-locations";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
@@ -1464,6 +1464,114 @@ ${allUrls.map(({ url, priority, changefreq }) => `  <url>
       res.json(allProducts);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch products" });
+    }
+  });
+
+  app.post("/api/admin/data-reset", requireSuperAdminAuth, express.json(), async (req, res) => {
+    const allowedSections = new Set(["orders", "products", "customers", "coupons", "videos", "homepage", "reviews", "analytics"]);
+    const requested = req.body?.sections;
+    if (!Array.isArray(requested) || requested.length === 0 || requested.length > allowedSections.size || requested.some((section: unknown) => typeof section !== "string" || !allowedSections.has(section))) {
+      return res.status(400).json({ message: "Select one or more valid data groups to reset." });
+    }
+    if (req.body?.confirmation !== "RESET IFIX DATA") {
+      return res.status(400).json({ message: "Type RESET IFIX DATA exactly to confirm this reset." });
+    }
+
+    const sections = [...new Set(requested as string[])];
+    const admin = await storage.getAdminById(req.session.adminId!);
+    const deleted: Record<string, number> = {};
+    try {
+      const deletedVideoRows = sections.includes("videos") ? await db.select().from(videos) : [];
+      await db.transaction(async (tx) => {
+        for (const section of sections) {
+          let count = 0;
+          switch (section) {
+            case "orders": count = (await tx.delete(orders).returning({ id: orders.id })).length; break;
+            case "products":
+              await tx.delete(wishlists);
+              count = (await tx.delete(products).returning({ id: products.id })).length;
+              break;
+            case "customers":
+              await tx.delete(wishlists);
+              count = (await tx.delete(customers).returning({ id: customers.id })).length;
+              break;
+            case "coupons": count = (await tx.delete(couponCodes).returning({ id: couponCodes.id })).length; break;
+            case "videos": count = (await tx.delete(videos).returning({ id: videos.id })).length; break;
+            case "homepage": {
+              const sectionsDeleted = await tx.delete(homeSections).returning({ id: homeSections.id });
+              const slidesDeleted = await tx.delete(featuredSlides).returning({ id: featuredSlides.id });
+              count = sectionsDeleted.length + slidesDeleted.length;
+              break;
+            }
+            case "reviews": count = (await tx.delete(reviews).returning({ id: reviews.id })).length; break;
+            case "analytics": {
+              const visitorsDeleted = await tx.delete(siteVisitors).returning({ id: siteVisitors.id });
+              const brokenLinksDeleted = await tx.delete(notFoundLogs).returning({ id: notFoundLogs.id });
+              count = visitorsDeleted.length + brokenLinksDeleted.length;
+              break;
+            }
+          }
+          deleted[section] = count;
+        }
+        await tx.insert(auditLogs).values(sections.map((section) => ({
+          action: `Admin data reset: ${section} (${deleted[section] || 0} records)`,
+          adminEmail: admin?.email || "unknown",
+          actionType: "data_reset",
+          targetType: "Data",
+          targetId: 0,
+          previousValue: JSON.stringify({ section, count: deleted[section] || 0 }),
+          newValue: "Reset completed",
+        })));
+      });
+
+      // Remove files belonging to videos whose database records were reset.
+      if (sections.includes("videos")) {
+        const videoRoot = path.resolve("public/uploads/videos");
+        for (const video of deletedVideoRows) {
+          for (const url of [video.url, video.originalUrl].filter((value): value is string => Boolean(value))) {
+            const filePath = path.resolve("public", url.replace(/^\/+/, ""));
+            if (filePath.startsWith(videoRoot + path.sep) && fs.existsSync(filePath)) {
+              try { fs.unlinkSync(filePath); }
+              catch (error) { console.warn("Could not remove reset video asset:", filePath, error); }
+            }
+          }
+        }
+      }
+      res.json({ message: "Selected data groups were reset.", deleted });
+    } catch (error) {
+      console.error("Admin data reset failed:", error);
+      res.status(500).json({ message: "Could not reset the selected data. No reset was completed." });
+    }
+  });
+
+  app.post("/api/admin/products/bulk-delete", requireAdminAuth, express.json(), async (req, res) => {
+    const ids = req.body?.ids;
+    if (!Array.isArray(ids) || ids.length === 0 || ids.length > 500 || ids.some((id: unknown) => typeof id !== "number" || !Number.isSafeInteger(id) || id < 1)) {
+      return res.status(400).json({ message: "Select between 1 and 500 valid product IDs." });
+    }
+    const admin = await storage.getAdminById(req.session.adminId!);
+    if (admin?.role === "staff") return res.status(403).json({ message: "Staff cannot delete products." });
+    try {
+      const uniqueIds = [...new Set(ids as number[])];
+      const deletedProducts = await db.transaction(async (tx) => {
+        const deleted = await tx.delete(products).where(inArray(products.id, uniqueIds)).returning({ id: products.id, name: products.name });
+        if (deleted.length > 0) {
+          await tx.insert(auditLogs).values(deleted.map((product) => ({
+            action: `Product Deleted: ${product.name}`,
+            adminEmail: admin?.email || "unknown",
+            actionType: "delete",
+            targetType: "Product",
+            targetId: product.id,
+            previousValue: JSON.stringify({ name: product.name }),
+            newValue: null,
+          })));
+        }
+        return deleted;
+      });
+      res.json({ deletedCount: deletedProducts.length, deletedIds: deletedProducts.map((product) => product.id) });
+    } catch (error) {
+      console.error("Bulk product delete failed:", error);
+      res.status(500).json({ message: "Could not delete the selected products." });
     }
   });
 

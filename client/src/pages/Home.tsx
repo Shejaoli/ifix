@@ -61,6 +61,7 @@ import {
   Tag,
   ChevronLeft,
   ChevronRight,
+  Wrench,
 } from "lucide-react";
 
 import { Navbar } from "@/components/Navbar";
@@ -160,6 +161,49 @@ const HomeHero = () => {
     </section>
   );
 };
+
+const appleCategories = [
+  { name: "iPhone", detail: "Shop the latest iPhones", icon: Smartphone, href: "/iphones" },
+  { name: "iPad", detail: "Tablets for work and play", icon: Tablet, href: "/shop?search=iPad" },
+  { name: "MacBook", detail: "Mac laptops for every workflow", icon: Laptop, href: "/shop?category=Laptops&search=MacBook" },
+  { name: "Apple Watch", detail: "Stay connected on the go", icon: Watch, href: "/shop?search=Apple%20Watch" },
+  { name: "AirPods", detail: "Wireless Apple audio", icon: Headphones, href: "/shop?search=AirPods" },
+];
+
+function AppleFirstShowcase() {
+  return (
+    <section className="imigongo-pattern imigongo-rings px-4 py-7 sm:px-6 sm:py-10 lg:px-8" aria-labelledby="apple-first-heading">
+      <div className="mx-auto max-w-7xl overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-white via-sky-50/60 to-violet-50/60 p-5 shadow-sm dark:border-white/10 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 sm:p-8">
+        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-primary">IFIX Apple collection</p>
+            <h1 id="apple-first-heading" className="mt-2 text-3xl font-black tracking-tight text-slate-950 dark:text-white sm:text-4xl">Find your next Apple device.</h1>
+            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600 dark:text-slate-300 sm:text-base">Shop iPhone, iPad, MacBook, Apple Watch and AirPods with trusted local support and delivery across Rwanda.</p>
+          </div>
+          <Link href="/iphones" className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-primary/90">Shop iPhone</Link>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {appleCategories.map(({ name, detail, icon: Icon, href }) => (
+            <Link key={name} href={href} className="group rounded-2xl border border-slate-200/80 bg-white/85 p-4 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg dark:border-white/10 dark:bg-white/5">
+              <span className="inline-flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-primary-foreground"><Icon className="h-5 w-5" /></span>
+              <span className="mt-3 block font-bold text-slate-900 dark:text-white">{name}</span>
+              <span className="mt-1 block text-xs leading-5 text-slate-500 dark:text-slate-400">{detail}</span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="mt-5 flex flex-col gap-3 rounded-2xl border border-primary/15 bg-primary/[0.045] p-4 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground"><Wrench className="h-5 w-5" /></span>
+            <div><p className="font-bold text-slate-900 dark:text-white">Need a device repaired?</p><p className="text-xs text-slate-600 dark:text-slate-300">Get help with iPhone, iPad, MacBook and more.</p></div>
+          </div>
+          <Link href="/repair" className="inline-flex min-h-10 items-center justify-center rounded-xl border border-primary/30 bg-background px-4 text-sm font-bold text-primary transition hover:bg-primary hover:text-primary-foreground">Book a repair</Link>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const FeaturedPosterMarquee = () => {
   const prefersReducedMotion = useReducedMotion();
@@ -1476,10 +1520,10 @@ export default function Home() {
   return (
     <>
       <Helmet>
-        <title>IFIX – Best Electronics Shop in Kigali, Rwanda</title>
-        <meta name="description" content="Shop the latest smartphones, laptops, tablets and certified electronics in Kigali Rwanda. Grade A refurbished devices with 12-month warranty. Trusted since 2019." />
-        <meta name="keywords" content="electronics kigali, smartphones rwanda, laptops kigali, iphone kigali, samsung rwanda, iFix, refurbished phones, certified electronics" />
-        <meta property="og:title" content="IFIX – Best Electronics Shop in Kigali" />
+        <title>Apple iPhone, iPad &amp; MacBook in Kigali | IFIX Rwanda</title>
+        <meta name="description" content="Shop iPhone, iPad, MacBook, Apple Watch and AirPods in Kigali, Rwanda. Find your next Apple device at IFIX with local delivery, support and repair service." />
+        <meta name="keywords" content="iPhone Kigali, Apple Rwanda, iPad Kigali, MacBook Rwanda, AirPods Kigali, Apple Watch Rwanda, Apple repair Kigali, IFIX" />
+        <meta property="og:title" content="Apple devices in Kigali | IFIX Rwanda" />
         <meta property="og:url" content="https://ifix.rw/" />
         <meta name="google-site-verification" content="HZMexTGNu2r654lO4ndFbX2gaHqrhkQv1GjPIFmurPo" />
         <link rel="canonical" href="https://ifix.rw/" />
@@ -1492,6 +1536,7 @@ export default function Home() {
       <div className="min-h-screen bg-background text-foreground overflow-x-clip">
 
         <HomeHero />
+        <AppleFirstShowcase />
         <TrustBar />
         <HomeSectionsDisplay />
         <TopDeals />

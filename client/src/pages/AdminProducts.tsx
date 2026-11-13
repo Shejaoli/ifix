@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,6 +52,7 @@ export default function AdminProducts({ onAddClick, onEditClick }: AdminProducts
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [stockStatus, setStockStatus] = useState("all");
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const [sortField, setSortField] = useState<SortField>("name");
   const [sortOrder, setSortOrder] = useState<SortOrder>("asc");
@@ -94,6 +96,24 @@ export default function AdminProducts({ onAddClick, onEditClick }: AdminProducts
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const pageIds = paginatedProducts.map((product) => product.id);
+  const allPageSelected = pageIds.length > 0 && pageIds.every((id) => selectedIds.has(id));
+
+  const toggleProductSelection = (id: number, checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const togglePageSelection = (checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      pageIds.forEach((id) => checked ? next.add(id) : next.delete(id));
+      return next;
+    });
+  };
 
   const toggleSort = (field: SortField) => {
     if (sortField === field) {
@@ -178,7 +198,8 @@ export default function AdminProducts({ onAddClick, onEditClick }: AdminProducts
     mutationFn: async (id: number) => {
       await apiRequest("DELETE", `/api/products/${id}`);
     },
-    onSuccess: () => {
+    onSuccess: (_data, id) => {
+      setSelectedIds((current) => { const next = new Set(current); next.delete(id); return next; });
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({
         title: "Product deleted successfully",
@@ -192,6 +213,20 @@ export default function AdminProducts({ onAddClick, onEditClick }: AdminProducts
         description: error.message,
       });
     },
+  });
+
+  const bulkDeleteMutation = useMutation({
+    mutationFn: async (ids: number[]) => {
+      const response = await apiRequest("POST", "/api/admin/products/bulk-delete", { ids });
+      return response.json();
+    },
+    onSuccess: (result) => {
+      setSelectedIds(new Set());
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/all-products"] });
+      toast({ title: "Selected products deleted", description: `${result.deletedCount} product${result.deletedCount === 1 ? "" : "s"} removed.` });
+    },
+    onError: (error: Error) => toast({ title: "Bulk delete failed", description: error.message, variant: "destructive" }),
   });
 
   const getStockBadge = (status: string) => {
@@ -353,11 +388,26 @@ export default function AdminProducts({ onAddClick, onEditClick }: AdminProducts
         </div>
       </div>
 
+      {selectedIds.size > 0 && <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3">
+        <p className="text-sm font-semibold">{selectedIds.size} product{selectedIds.size === 1 ? "" : "s"} selected</p>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" onClick={() => setSelectedIds(new Set())}>Clear selection</Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild><Button variant="destructive" size="sm" disabled={bulkDeleteMutation.isPending}><Trash2 className="mr-2 h-4 w-4" />Delete selected</Button></AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader><AlertDialogTitle>Delete {selectedIds.size} selected products?</AlertDialogTitle><AlertDialogDescription>This permanently removes the selected catalog products. Orders already placed are not changed.</AlertDialogDescription></AlertDialogHeader>
+              <AlertDialogFooter><AlertDialogCancel>Cancel</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => bulkDeleteMutation.mutate(Array.from(selectedIds))}>Delete products</AlertDialogAction></AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </div>}
+
       <div className="rounded-md border bg-card overflow-hidden">
         <div className="overflow-x-auto relative max-h-[600px] -mx-4 sm:mx-0 px-4 sm:px-0">
           <Table className="min-w-full">
             <TableHeader className="sticky top-0 z-10 bg-card shadow-sm">
               <TableRow>
+                <TableHead className="w-10"><Checkbox aria-label="Select products on this page" checked={allPageSelected} onCheckedChange={(checked) => togglePageSelection(checked === true)} /></TableHead>
                 <TableHead className="w-[80px]">Image</TableHead>
                 <TableHead 
                   className="cursor-pointer hover:text-primary transition-colors"
@@ -396,6 +446,7 @@ export default function AdminProducts({ onAddClick, onEditClick }: AdminProducts
                   whileHover={{ backgroundColor: "rgba(var(--primary), 0.02)" }}
                   className="hover:bg-muted/50 transition-colors border-b"
                 >
+                  <TableCell><Checkbox aria-label={`Select ${product.name}`} checked={selectedIds.has(product.id)} onCheckedChange={(checked) => toggleProductSelection(product.id, checked === true)} /></TableCell>
                   <TableCell>
                     <img
                       src={product.imageUrl?.startsWith("http") ? product.imageUrl : (import.meta.env.VITE_API_URL || "") + product.imageUrl}

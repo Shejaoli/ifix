@@ -125,17 +125,16 @@ export function Navbar() {
                   </Link>
                 </div>
 
-                {/* Section 2: Trending */}
+                {/* Apple-first device shortcuts */}
                 <div>
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Trending</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-2">Shop Apple</h3>
                   <div className="space-y-0.5">
                     {[
-                      { name: "iPhones", icon: Smartphone, href: "/iphones" },
-                      { name: "Samsung Phones", icon: Smartphone, href: "/shop?search=samsung&category=Smartphones" },
-                      { name: "Smartphones", icon: Smartphone, href: "/shop?category=Smartphones" },
-                      { name: "Laptops", icon: Laptop, href: "/laptops" },
-                      { name: "Tablets", icon: Tablet, href: "/shop?category=Tablets" },
-                      { name: "Smartwatches", icon: Watch, href: "/shop?category=Smartwatches" },
+                      { name: "iPhone", icon: Smartphone, href: "/iphones" },
+                      { name: "iPad", icon: Tablet, href: "/shop?search=iPad" },
+                      { name: "MacBook", icon: Laptop, href: "/shop?category=Laptops&search=MacBook" },
+                      { name: "Apple Watch", icon: Watch, href: "/shop?search=Apple%20Watch" },
+                      { name: "AirPods", icon: Layers, href: "/shop?search=AirPods" },
                     ].map((item) => (
                       <Link key={item.name} href={item.href} onClick={() => setIsMenuOpen(false)}>
                         <div className="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-muted transition-colors cursor-pointer">
@@ -235,6 +234,10 @@ export function Navbar() {
             <NavbarSearch />
           </div>
 
+          <Link href="/repair" className="inline-flex h-10 shrink-0 items-center gap-2 rounded-lg bg-primary px-3 text-sm font-bold text-primary-foreground shadow-sm transition hover:bg-primary/90">
+            <Wrench className="h-4 w-4" /> Repair
+          </Link>
+
           <div className="ml-auto flex shrink-0 items-center gap-1">
             <Link href={customer ? "/my-orders" : "/login"} title={customer ? `Account: ${customer.fullName}` : "Log in"} className={`inline-flex h-10 items-center gap-2 rounded-lg px-2.5 text-sm font-semibold transition hover:bg-accent/70 hover:text-primary ${location === "/login" ? "text-primary" : "text-foreground"}`}>
               <User className="h-5 w-5" />
@@ -295,6 +298,9 @@ export function Navbar() {
             <div className="flex min-w-0 items-center gap-1 sm:gap-1.5">
               <DeliveryLocationPicker compact />
               <div className="min-w-0 flex-1"><NavbarSearch mobile /></div>
+              <Link href="/repair" aria-label="Book a repair" title="Book a repair" className="inline-flex h-8 shrink-0 items-center gap-1 rounded-lg bg-primary px-2 text-xs font-bold text-primary-foreground sm:h-9 sm:px-3 sm:text-sm">
+                <Wrench className="h-3.5 w-3.5" /><span>Repair</span>
+              </Link>
             </div>
           )}
         </div>

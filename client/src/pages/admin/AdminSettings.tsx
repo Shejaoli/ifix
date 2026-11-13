@@ -2,13 +2,15 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { Loader2, ShieldCheck, User, KeyRound, Mail, Fingerprint, Bell, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, User, KeyRound, Mail, Fingerprint, Bell, RefreshCw, Database, AlertTriangle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { SUPPORTED_CURRENCIES, type SiteCurrency } from "@/lib/site-currency";
@@ -177,6 +179,73 @@ function CurrencySettingsCard() {
   </Card>;
 }
 
+const RESET_GROUPS = [
+  { id: "orders", title: "Orders", detail: "Remove all order records." },
+  { id: "products", title: "Products", detail: "Remove all products and saved wishlists." },
+  { id: "customers", title: "Customers", detail: "Remove customer accounts and saved wishlists." },
+  { id: "coupons", title: "Coupons", detail: "Remove coupon codes and usage records." },
+  { id: "videos", title: "Promo videos", detail: "Remove promo video records and uploaded video files." },
+  { id: "homepage", title: "Homepage content", detail: "Remove homepage sections and featured slides." },
+  { id: "reviews", title: "Reviews", detail: "Remove product reviews and ratings." },
+  { id: "analytics", title: "Analytics logs", detail: "Clear visitor and broken-link tracking data." },
+] as const;
+
+type ResetGroupId = typeof RESET_GROUPS[number]["id"];
+
+function AdminDataResetCard({ isSuperAdmin }: { isSuperAdmin: boolean }) {
+  const { toast } = useToast();
+  const [sections, setSections] = useState<ResetGroupId[]>([]);
+  const [confirmation, setConfirmation] = useState("");
+  const resetMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/data-reset", { sections, confirmation: confirmation.trim() });
+      return response.json();
+    },
+    onSuccess: (result) => {
+      const total = Object.values(result.deleted as Record<string, number>).reduce((sum, count) => sum + count, 0);
+      toast({ title: "Selected data reset complete", description: `${total} records removed. Admin accounts and audit history were preserved.` });
+      setSections([]);
+      setConfirmation("");
+      queryClient.invalidateQueries();
+    },
+    onError: (error: Error) => toast({ title: "Data reset failed", description: error.message, variant: "destructive" }),
+  });
+
+  if (!isSuperAdmin) return null;
+
+  const toggle = (id: ResetGroupId, checked: boolean) => setSections((current) => checked ? [...new Set([...current, id])] : current.filter((item) => item !== id));
+  const canReset = sections.length > 0 && confirmation.trim() === "RESET IFIX DATA" && !resetMutation.isPending;
+
+  return <Card className="border border-destructive/20 shadow-xl bg-card/70 backdrop-blur md:col-span-2">
+    <CardHeader className="bg-destructive/[0.045] border-b border-destructive/10">
+      <CardTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tight text-destructive"><Database className="h-5 w-5" /> Reset selected admin data</CardTitle>
+      <CardDescription>Choose exactly which data group to clear. Each selection is processed separately so you do not have to wipe everything.</CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-5 pt-5">
+      <div className="grid gap-2 sm:grid-cols-2">
+        {RESET_GROUPS.map((group) => <label key={group.id} className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-background p-3 transition hover:border-destructive/30">
+          <Checkbox checked={sections.includes(group.id)} onCheckedChange={(checked) => toggle(group.id, checked === true)} />
+          <span><span className="block text-sm font-bold">{group.title}</span><span className="mt-0.5 block text-xs text-muted-foreground">{group.detail}</span></span>
+        </label>)}
+      </div>
+      <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.06] p-4">
+        <p className="flex items-center gap-2 text-sm font-bold text-amber-800 dark:text-amber-300"><AlertTriangle className="h-4 w-4" />Protected action</p>
+        <p className="mt-1 text-xs leading-5 text-muted-foreground">Only the main admin account can run this. Admin accounts and audit history are never cleared. This action permanently deletes the selected records.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+        <div className="space-y-2"><Label htmlFor="reset-confirmation">Type RESET IFIX DATA to unlock the reset button</Label><Input id="reset-confirmation" value={confirmation} onChange={(event) => setConfirmation(event.target.value)} autoComplete="off" spellCheck={false} placeholder="RESET IFIX DATA" /></div>
+        <AlertDialog>
+          <AlertDialogTrigger asChild><Button type="button" variant="destructive" className="h-11" disabled={!canReset}><Database className="mr-2 h-4 w-4" />Review reset</Button></AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader><AlertDialogTitle>Confirm selected data reset</AlertDialogTitle><AlertDialogDescription>This will permanently clear: {sections.map((id) => RESET_GROUPS.find((group) => group.id === id)?.title).filter(Boolean).join(", ")}. Admin login accounts and audit history will remain.</AlertDialogDescription></AlertDialogHeader>
+            <AlertDialogFooter><AlertDialogCancel>Go back</AlertDialogCancel><AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={() => resetMutation.mutate()} disabled={resetMutation.isPending}>{resetMutation.isPending ? "Resetting…" : "Reset selected data"}</AlertDialogAction></AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </CardContent>
+  </Card>;
+}
+
 const accountSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
   email: z.string().email("Invalid email address"),
@@ -244,6 +313,7 @@ export default function AdminSettings() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <CurrencySettingsCard />
+        <AdminDataResetCard isSuperAdmin={me?.role === "admin"} />
         <div className="space-y-8">
           <Card className="border-none shadow-xl bg-card/50 backdrop-blur">
             <CardHeader>

@@ -41,7 +41,11 @@ export function Footer() {
             <h3 className="mb-4 text-xs font-bold uppercase tracking-[0.18em] text-yellow-300">Explore</h3>
             <ul className="space-y-3">
               <li><Link href="/" className={linkClass}>Home</Link></li>
+              <li><Link href="/iphones" className={linkClass}>Shop iPhone</Link></li>
+              <li><Link href="/shop?search=iPad" className={linkClass}>Shop iPad</Link></li>
+              <li><Link href="/shop?category=Laptops&amp;search=MacBook" className={linkClass}>Shop MacBook</Link></li>
               <li><Link href="/shop" className={linkClass}>Shop all products</Link></li>
+              <li><Link href="/repair" className={linkClass}>Device repair</Link></li>
               <li><Link href="/deals" className={linkClass}>Hot deals</Link></li>
               <li><Link href="/about" className={linkClass}>Our story</Link></li>
               <li><Link href="/contact" className={linkClass}>Customer support</Link></li>
