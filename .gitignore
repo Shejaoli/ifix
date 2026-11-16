@@ -21,6 +21,12 @@ logs/
 
 # User uploads
 uploads/
+!/public/
+!/public/uploads/
+/public/uploads/*
+!/public/uploads/products/
+!/public/uploads/products/**
+/public/uploads/videos/
 
 # Backups
 *.dump

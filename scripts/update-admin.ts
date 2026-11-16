@@ -1,27 +1,16 @@
-
-import { storage } from "./server/storage";
-import { hashPassword } from "./server/auth";
-import { db } from "./server/db";
-import { admins } from "./shared/schema";
+import { storage } from "../server/storage";
+import { hashPassword } from "../server/auth";
+import { db } from "../server/db";
+import { admins } from "../shared/schema";
 import { eq } from "drizzle-orm";
 
 async function updateAdminPassword() {
-  const adminEmail = "admin@ifix.com";
-  const hashedPassword = await hashPassword("Admin-Dopic-1!2@");
-  
+  const adminEmail = process.env.ADMIN_EMAIL?.trim();
+  const password = process.env.ADMIN_PASSWORD;
+  if (!adminEmail || !password || password.length < 12) throw new Error("Set ADMIN_EMAIL and ADMIN_PASSWORD (at least 12 characters) in the environment.");
   const admin = await storage.getAdminByEmail(adminEmail);
-  if (admin) {
-    await db.update(admins)
-      .set({ passwordHash: hashedPassword })
-      .where(eq(admins.id, admin.id));
-    console.log("Admin password updated successfully");
-  } else {
-    console.log("Admin not found, seed will create it on next start");
-  }
-  process.exit(0);
+  if (!admin) throw new Error("No admin account matches ADMIN_EMAIL.");
+  await db.update(admins).set({ passwordHash: await hashPassword(password) }).where(eq(admins.id, admin.id));
+  console.log("Admin password updated.");
 }
-
-updateAdminPassword().catch(err => {
-  console.error(err);
-  process.exit(1);
-});
+updateAdminPassword().catch(err => { console.error(err.message || err); process.exit(1); });

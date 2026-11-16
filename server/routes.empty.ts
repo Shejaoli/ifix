@@ -16,12 +16,6 @@ import { Buffer } from "buffer";
 import ffmpeg from "fluent-ffmpeg";
 
 
-app.get("/__debug/hash", async (req, res) => {
- const password = "Admin-Dopic-1!2@"; // or your chosen password
- const hashed = await hashPassword(password);
- res.json({ hashed });
-});
-
 // Video compression utility
 async function compressVideo(inputPath: string, outputPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -817,140 +811,36 @@ export async function registerRoutes(
     res.json({ received: true });
   });
 
-  // Seed data logic protected to only run if database is empty
-  try {
-    const existingProducts = await storage.getProducts();
-    const existingAdmins = await storage.getAdminByEmail("admin@ifix.com");
-
-    if (existingProducts.length === 0 || !existingAdmins) {
-      console.log("Database empty or missing admin, running seed logic...");
-      await seedDatabase();
-    } else {
-      console.log("Database already initialized, skipping seed.");
-    }
-  } catch (error) {
-    console.error("Error checking database status during startup:", error);
-    // Attempt to seed anyway if check fails (might be first run with empty tables)
-    await seedDatabase();
-  }
-
+  try { await seedDatabase(); } catch (error) { console.error("Database initialization failed:", error); }
   return httpServer;
 }
 
 async function seedDatabase() {
-  const existing = await storage.getProducts();
-  if (existing.length === 0) {
-    const seedProducts = [
-      {
-        name: "iPhone 17 Pro Max",
-        description: "The ultimate iPhone. Titanium design, A19 Pro chip, and the most advanced camera system ever in an iPhone.",
-        price: 1800000,
-        category: "Smartphones",
-        brand: "Apple",
-        imageUrl: "/images/iphone-17-pro-max-1.png",
-        stockStatus: "pre_order",
-        isFeatured: true,
-        specs: { "Storage": "256GB/512GB/1TB", "Chip": "A19 Pro", "Display": "6.9-inch Super Retina XDR" }
-      },
-      {
-        name: "Soundcore Liberty 4 NC",
-        description: "Reduce noise by up to 98.5% with our advanced noise cancelling system. Crisp sound and long battery life.",
-        price: 120000,
-        category: "Audio",
-        brand: "Soundcore",
-        imageUrl: "/images/soundcore-liberty-4.jpg",
-        stockStatus: "in_stock",
-        isFeatured: true,
-        specs: { "Battery": "10H/50H", "ANC": "Adaptive ANC 2.0", "Codec": "LDAC" }
-      },
-      {
-        name: "Beats Pill",
-        description: "Portable wireless speaker with room-filling sound. Designed for life on the go.",
-        price: 250000,
-        category: "Audio",
-        brand: "Beats",
-        imageUrl: "/images/beats-pill.jpg",
-        stockStatus: "in_stock",
-        isFeatured: true,
-        specs: { "Battery": "Up to 24 hours", "Connectivity": "Bluetooth & USB-C", "Water Resistance": "IP67" }
-      },
-      {
-        name: "UGREEN 6-in-1 USB-C Hub",
-        description: "Expand your connectivity with HDMI 4K, USB 3.0, SD Card reader and PD charging.",
-        price: 65000,
-        category: "Accessories",
-        brand: "UGREEN",
-        imageUrl: "/images/ugreen-adapter.jpg",
-        stockStatus: "in_stock",
-        isFeatured: false,
-        specs: { "Ports": "HDMI, 3x USB 3.0, SD/TF", "Power": "100W PD" }
-      },
-      {
-        name: "Saramonic Blink 500",
-        description: "Ultracompact 2.4GHz Dual-Channel Wireless Microphone System for Cameras and Mobile Devices.",
-        price: 280000,
-        category: "Creator Gear",
-        brand: "Saramonic",
-        imageUrl: "/images/saramonic-mic.jpg",
-        stockStatus: "in_stock",
-        isFeatured: true,
-        specs: { "Range": "100m", "Channels": "Dual", "Battery": "Built-in" }
-      },
-      {
-        name: "iPhone 16",
-        description: "Dynamic Island, 48MP Main camera, and USB-C. A total powerhouse.",
-        price: 1200000,
-        category: "Smartphones",
-        brand: "Apple",
-        imageUrl: "/images/iphone-16.png",
-        stockStatus: "in_stock",
-        isFeatured: true,
-        specs: { "Storage": "128GB/256GB", "Chip": "A18", "Display": "6.1-inch Super Retina XDR" }
-      }
-    ];
-
-    for (const product of seedProducts) {
-      // @ts-ignore - Specs type compatibility for seed data
-      await storage.createProduct(product);
+  if ((await storage.getProducts()).length === 0) {
+    const catalogPath = path.resolve(process.cwd(), "data/catalog-products.json");
+    if (fs.existsSync(catalogPath)) {
+      const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8")) as Record<string, any>[];
+      const clean = (value: any): any => {
+        if (typeof value === "string") return value.replace(/dopik/gi, "IFIX");
+        if (Array.isArray(value)) return value.map(clean);
+        if (value && typeof value === "object") return Object.fromEntries(Object.entries(value).map(([key, child]) => [key, clean(child)]));
+        return value;
+      };
+      for (const item of catalog) await storage.createProduct(clean({
+        name: item.name, description: item.description || "", metaTitle: item.meta_title,
+        metaDescription: item.meta_description, searchKeywords: item.search_keywords,
+        price: item.price, category: item.category, brand: item.brand, imageUrl: item.image_url,
+        additionalImages: item.additional_images || [], stockStatus: item.stock_status || "in_stock",
+        isFeatured: item.is_featured || false, isHotDeal: item.is_hot_deal || false,
+        hotDealDiscount: item.hot_deal_discount, specs: item.specs || {}, variations: item.variations,
+      }));
+      console.log(`Imported ${catalog.length} public catalog products.`);
     }
   }
-
-// Seed Admin
-const adminEmail = "admin@ifix.com";
-const existingAdmin = await storage.getAdminByEmail(adminEmail);
-
-if (!existingAdmin) {
- const initialPassword = "Admin-Dopic-1!2@";
- const hashedPassword = await hashPassword(initialPassword);
- await storage.createAdmin({
- email: adminEmail,
- passwordHash: hashedPassword,
- role: "admin",
- });
- console.log("Admin user created with initial password");
-} else {
- console.log("Admin user already exists, not changing password");
-}
-
-// Seed Orders if none exist
-const existingOrders = await storage.getOrders();
-  if (existingOrders.length === 0) {
-    const seedOrders = [
-      {
-        customerName: "Jean Paul",
-        customerPhone: "0788123456",
-        totalAmount: 1800000,
-        status: "pending",
-      },
-      {
-        customerName: "Marie Claire",
-        customerPhone: "0788654321",
-        totalAmount: 120000,
-        status: "paid",
-      },
-    ];
-    for (const order of seedOrders) {
-      await storage.createOrder(order);
-    }
+  const email = process.env.INITIAL_ADMIN_EMAIL?.trim();
+  const password = process.env.INITIAL_ADMIN_PASSWORD;
+  if (email && password) {
+    if (password.length < 12) throw new Error("INITIAL_ADMIN_PASSWORD must be at least 12 characters.");
+    if (!await storage.getAdminByEmail(email)) await storage.createAdmin({ email, passwordHash: await hashPassword(password), role: "admin" });
   }
 }
