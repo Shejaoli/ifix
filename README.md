@@ -27,6 +27,6 @@ Full-stack IFIX electronics storefront and admin dashboard. This repository incl
 
 ## Snapshot contents and privacy
 
-The included catalog is reusable product data, and `public/uploads/products/` contains the associated product images. The database snapshot deliberately excludes customer accounts, order histories, admin accounts/password hashes, sessions, payment records, and other private operational data. Each new installation gets its own empty database and initial admin credentials. Runtime uploads, videos, environment files, build output, and database dumps are ignored by Git.
+The included catalog is reusable product data, `public/uploads/products/` contains the associated product images, and `data/site-currency.json` preserves the store display currency and rate for first startup. The database snapshot deliberately excludes customer accounts, order histories, admin accounts/password hashes, sessions, payment records, and other private operational data. Each new installation gets its own empty database and initial admin credentials. Runtime uploads, videos, environment files, build output, and database dumps are ignored by Git.
 
-On an existing database, startup imports the catalog only when the products table is empty.
+On an existing database, startup imports the catalog only when the products table is empty, and applies the saved currency setting only when no currency setting exists yet. Delivery fees, featured slides, home sections, coupons, reviews, and videos were empty in the source database.

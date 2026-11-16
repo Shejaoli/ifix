@@ -6,7 +6,7 @@ import { z } from "zod";
 import { hashPassword, verifyPassword, requireAdminAuth } from "./auth";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { insertProductSchema, insertOrderSchema, orders, insertVideoSchema, videos } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, orders, insertVideoSchema, videos, siteCurrencySettings } from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -842,5 +842,15 @@ async function seedDatabase() {
   if (email && password) {
     if (password.length < 12) throw new Error("INITIAL_ADMIN_PASSWORD must be at least 12 characters.");
     if (!await storage.getAdminByEmail(email)) await storage.createAdmin({ email, passwordHash: await hashPassword(password), role: "admin" });
+  }
+  const currencyPath = path.resolve(process.cwd(), "data/site-currency.json");
+  if (fs.existsSync(currencyPath)) {
+    const [currentSetting] = await db.select().from(siteCurrencySettings).where(eq(siteCurrencySettings.id, 1)).limit(1);
+    if (!currentSetting) {
+      const setting = JSON.parse(fs.readFileSync(currencyPath, "utf8")) as { currency: string; rwfPerUnit: string };
+      if (/^[A-Z]{3}$/.test(setting.currency) && Number.isFinite(Number(setting.rwfPerUnit)) && Number(setting.rwfPerUnit) > 0) {
+        await storage.setSiteCurrency(setting.currency, setting.rwfPerUnit);
+      }
+    }
   }
 }

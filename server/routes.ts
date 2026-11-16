@@ -9,7 +9,7 @@ import { db } from "./db";
 import { eq, count, desc, inArray } from "drizzle-orm";
 import { OAuth2Client } from "google-auth-library";
 import { randomBytes } from "crypto";
-import { insertProductSchema, insertOrderSchema, orders, ipayWebhookEvents, insertVideoSchema, videos, admins, insertHomeSectionSchema, products, insertCouponCodeSchema, type Order, auditLogs, customers, wishlists, couponCodes, homeSections, featuredSlides, reviews, siteVisitors, notFoundLogs } from "@shared/schema";
+import { insertProductSchema, insertOrderSchema, orders, ipayWebhookEvents, insertVideoSchema, videos, admins, insertHomeSectionSchema, products, insertCouponCodeSchema, type Order, auditLogs, customers, wishlists, couponCodes, homeSections, featuredSlides, reviews, siteVisitors, notFoundLogs, siteCurrencySettings } from "@shared/schema";
 import { DISTRICTS_BY_PROVINCE, isValidRwandaLocation } from "@shared/rwanda-locations";
 import rateLimit from "express-rate-limit";
 import multer from "multer";
@@ -2740,6 +2740,16 @@ async function seedDatabase() {
     if (!await storage.getAdminByEmail(adminEmail)) {
       await storage.createAdmin({ email: adminEmail, passwordHash: await hashPassword(initialPassword), role: "admin" });
       console.log("Created the initial admin from environment configuration.");
+    }
+  }
+  const currencyPath = path.resolve(process.cwd(), "data/site-currency.json");
+  if (fs.existsSync(currencyPath)) {
+    const [currentSetting] = await db.select().from(siteCurrencySettings).where(eq(siteCurrencySettings.id, 1)).limit(1);
+    if (!currentSetting) {
+      const setting = JSON.parse(fs.readFileSync(currencyPath, "utf8")) as { currency: string; rwfPerUnit: string };
+      if (/^[A-Z]{3}$/.test(setting.currency) && Number.isFinite(Number(setting.rwfPerUnit)) && Number(setting.rwfPerUnit) > 0) {
+        await storage.setSiteCurrency(setting.currency, setting.rwfPerUnit);
+      }
     }
   }
 }
